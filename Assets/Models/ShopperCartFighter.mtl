@@ -1,0 +1,98 @@
+# Cart Combat Materials
+
+newmtl Character_Skin
+Kd 0.920 0.720 0.580
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Character_Jacket
+Kd 0.180 0.380 0.720
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Character_Shirt
+Kd 0.950 0.950 0.950
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Character_Cap
+Kd 0.850 0.150 0.150
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Character_Goggles
+Kd 0.150 0.150 0.180
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Character_Pants
+Kd 0.220 0.250 0.300
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Character_Shoes
+Kd 0.900 0.200 0.200
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Character_Gloves
+Kd 0.200 0.200 0.220
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Cart_Metal
+Kd 0.800 0.820 0.850
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Cart_Bumper
+Kd 0.900 0.180 0.120
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Cart_Gripper
+Kd 0.120 0.120 0.120
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
+newmtl Cart_Wheels
+Kd 0.150 0.150 0.160
+Ka 0.2 0.2 0.2
+Ks 0.5 0.5 0.5
+Ns 32.0
+d 1.0
+illum 2
+
