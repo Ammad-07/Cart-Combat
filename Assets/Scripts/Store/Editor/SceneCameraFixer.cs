@@ -77,6 +77,8 @@ namespace CartCombat.Store.Editor
         [MenuItem("Cart Combat/Ensure 3D Player Character Visible", false, 2)]
         public static void EnsurePlayerVisible()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isPlaying) return;
+
             Vector3 spawnPos = new Vector3(-12.6f, 0.05f, -20.16f);
             Quaternion spawnRot = Quaternion.identity;
 
@@ -90,7 +92,10 @@ namespace CartCombat.Store.Editor
             GameObject player = CartCombat.Player.PlayerCharacterBuilder.SpawnOrSetupPlayer(spawnPos, spawnRot);
             if (player != null)
             {
-                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                }
                 SceneView.RepaintAll();
                 Debug.Log("<color=#00FF88><b>[Cart Combat]</b> 3D Shopper Character & Combat Cart model is now ATTACHED and VISIBLE!</color>");
             }
@@ -99,6 +104,8 @@ namespace CartCombat.Store.Editor
         [MenuItem("Cart Combat/Spawn Other Shoppers in Scene", false, 3)]
         public static void EnsureShoppersVisible()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isPlaying) return;
+
             NPCShopperSpawner spawner = Object.FindFirstObjectByType<NPCShopperSpawner>();
             if (spawner == null)
             {
@@ -112,7 +119,10 @@ namespace CartCombat.Store.Editor
                 spawner.SpawnAll();
             }
 
-            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
             SceneView.RepaintAll();
             Debug.Log("<color=#00FF88><b>[Cart Combat]</b> Other NPC Shoppers are now spawned and VISIBLE in the scene hierarchy!</color>");
         }
@@ -120,6 +130,8 @@ namespace CartCombat.Store.Editor
         [MenuItem("Cart Combat/Apply Professional Clean Naming", false, 4)]
         public static void ApplyCleanNaming()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isPlaying) return;
+
             // 1. Rename Scene file to StartingScreen if needed
             string currentScenePath = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path;
             if (currentScenePath.Contains("SampleScene.unity"))
@@ -191,7 +203,10 @@ namespace CartCombat.Store.Editor
                 }
             }
 
-            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+            if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+            }
             SceneView.RepaintAll();
             Debug.Log("<color=#00FF88><b>[Cart Combat]</b> Professional clean naming applied across Scene and Hierarchy!</color>");
         }
@@ -199,12 +214,17 @@ namespace CartCombat.Store.Editor
         [MenuItem("Cart Combat/Stock All Shelves & Store Items", false, 5)]
         public static void StockAllShelves()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isPlaying) return;
+
             GroceryStoreBuilder builder = Object.FindFirstObjectByType<GroceryStoreBuilder>();
             if (builder != null)
             {
                 builder.EnsureCustomItemsStocked(true);
-                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-                UnityEditor.SceneManagement.EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                    UnityEditor.SceneManagement.EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                }
                 SceneView.RepaintAll();
                 Debug.Log("<color=#00FF88><b>[Cart Combat]</b> All 4 Aisles and produce tables have been freshly STOCKED and PERFECTLY ALIGNED with 3D grocery items!</color>");
             }
@@ -215,6 +235,7 @@ namespace CartCombat.Store.Editor
         {
             EditorApplication.delayCall += () =>
             {
+                if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isPlaying) return;
                 RemoveGlitchLines();
                 EnsurePlayerVisible();
                 EnsureShoppersVisible();
@@ -226,6 +247,8 @@ namespace CartCombat.Store.Editor
         [MenuItem("Cart Combat/Remove Glitch Lines & Clean Scene", false, 1)]
         public static void RemoveGlitchLines()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isPlaying) return;
+
             int deletedCount = 0;
 
             // 1. Remove all items that were accidentally parented inside scaled shelf tiers anywhere in the scene

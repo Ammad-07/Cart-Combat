@@ -142,7 +142,7 @@ namespace CartCombat.Player
             }
             if (healthText != null)
             {
-                healthText.text = $"<color=#FF5555>❤</color> {playerHealth:F0} / {maxHealth:F0} HP";
+                healthText.text = $"<color=#FF5555>HP:</color> {playerHealth:F0} / {maxHealth:F0}";
             }
 
             // Speed display
