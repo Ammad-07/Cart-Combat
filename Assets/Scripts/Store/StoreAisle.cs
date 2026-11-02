@@ -33,7 +33,7 @@ namespace CartCombat.Store
             aisleNumber = number;
             categoryName = category;
             aisleThemeColor = themeColor;
-            gameObject.name = $"Aisle_{number:D2}_{category.Replace(" ", "")}";
+            gameObject.name = $"Aisle_{number:D2}";
         }
 
         public void RegisterItem(GroceryItem item)
@@ -44,11 +44,6 @@ namespace CartCombat.Store
             }
         }
 
-        private void OnDrawGizmos()
-        {
-            // Draw a subtle wireframe bounding indicator in the editor
-            Gizmos.color = aisleThemeColor;
-            Gizmos.DrawWireCube(transform.position + Vector3.up * 1.5f, new Vector3(3f, 3f, 20f));
-        }
+        // Bounding gizmos removed for a clean, distraction-free store view
     }
 }

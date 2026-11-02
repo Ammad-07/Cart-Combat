@@ -228,11 +228,11 @@ namespace CartCombat.Store
 
             // Create main groups
             GameObject archGroup = CreateGroup("Architecture");
-            GameObject checkoutGroup = CreateGroup("CheckoutArena");
+            GameObject checkoutGroup = CreateGroup("Checkouts");
             GameObject cartCorralGroup = CreateGroup("CartCorral");
             GameObject aislesGroup = CreateGroup("Aisles");
             GameObject departmentsGroup = CreateGroup("Departments");
-            GameObject hazardsGroup = CreateGroup("CombatHazards");
+            GameObject hazardsGroup = CreateGroup("Hazards");
 
             // 1. Architecture
             BuildFloor(archGroup.transform);
@@ -640,7 +640,7 @@ namespace CartCombat.Store
 
         private void CreateAisle(Transform parent, int aisleNum, string category, Color themeColor, Vector3 pos)
         {
-            GameObject aisle = new GameObject($"Aisle_{aisleNum:D2}_{category.Replace(" ", "")}");
+            GameObject aisle = new GameObject($"Aisle_{aisleNum:D2}");
             aisle.transform.SetParent(parent, false);
             aisle.transform.position = pos;
 
@@ -684,8 +684,8 @@ namespace CartCombat.Store
                 // Stock items on shelves
                 if (config.populateShelves)
                 {
-                    PopulateShelfItems(comp, shelfL.transform, aisleNum, true);
-                    PopulateShelfItems(comp, shelfR.transform, aisleNum, false);
+                    PopulateShelfItems(comp, shelfL.transform, aisleNum, true, y);
+                    PopulateShelfItems(comp, shelfR.transform, aisleNum, false, y);
                 }
             }
 
@@ -737,17 +737,29 @@ namespace CartCombat.Store
             DestroyImmediate(cableR.GetComponent<Collider>());
         }
 
-        private void PopulateShelfItems(StoreAisle aisle, Transform shelf, int aisleNum, bool isLeft)
+        private void PopulateShelfItems(StoreAisle aisle, Transform shelf, int aisleNum, bool isLeft, float shelfY)
         {
             int itemCount = config.itemsPerShelfTier;
             float stepZ = config.aisleLength / (itemCount + 1);
             float startZ = -config.aisleLength * 0.5f + stepZ;
+            float width = config.shelvingWidth;
+
+            // Dedicated items container per aisle with uniform scale (1,1,1) so items are never stretched
+            Transform itemsRoot = aisle.transform.Find("StockedItems");
+            if (itemsRoot == null)
+            {
+                GameObject rootObj = new GameObject("StockedItems");
+                rootObj.transform.SetParent(aisle.transform, false);
+                itemsRoot = rootObj.transform;
+            }
 
             for (int i = 0; i < itemCount; i++)
             {
                 float z = startZ + i * stepZ;
-                Vector3 itemPos = shelf.TransformPoint(new Vector3(0f, 0.05f, z));
-                Quaternion itemRot = Quaternion.identity;
+                float xOffset = isLeft ? -width * 0.25f : width * 0.25f;
+                Vector3 localPos = new Vector3(xOffset, shelfY + 0.04f, z);
+                Vector3 itemPos = aisle.transform.TransformPoint(localPos);
+                Quaternion itemRot = aisle.transform.rotation;
                 GroceryItemType itemType = GroceryItemType.CerealBox;
 
                 switch (aisleNum)
@@ -755,7 +767,7 @@ namespace CartCombat.Store
                     case 1:
                         // Snacks & Cereal: alternating Chips and Cereal boxes
                         itemType = (i % 2 == 0) ? GroceryItemType.Chips : GroceryItemType.CerealBox;
-                        itemRot = Quaternion.Euler(0f, (i % 2 == 0) ? 15f : 0f, 0f);
+                        itemRot *= Quaternion.Euler(0f, (i % 2 == 0) ? 15f : 0f, 0f);
                         break;
                     case 2:
                         // Canned goods & soups
@@ -771,7 +783,7 @@ namespace CartCombat.Store
                         break;
                 }
 
-                GameObject itemObj = GroceryItemFactory.CreateItem(itemType, itemPos, itemRot, shelf);
+                GameObject itemObj = GroceryItemFactory.CreateItem(itemType, itemPos, itemRot, itemsRoot);
                 Rigidbody rb = itemObj.GetComponent<Rigidbody>();
                 if (rb != null) rb.isKinematic = true;
 

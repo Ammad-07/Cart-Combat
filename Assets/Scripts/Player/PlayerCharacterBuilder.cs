@@ -21,12 +21,21 @@ namespace CartCombat.Player
             if (existing != null)
             {
                 playerObj = existing.gameObject;
+                playerObj.name = "Player";
                 playerObj.transform.position = spawnPosition;
                 playerObj.transform.rotation = spawnRotation;
+
+                // Ensure 3D character & combat cart mesh is attached
+                if (playerObj.transform.Find("CartModel") == null &&
+                    playerObj.transform.Find("ShopperCartFighter_Mesh") == null &&
+                    playerObj.transform.Find("Visual_CharacterAndCart") == null)
+                {
+                    AttachCharacterModel(playerObj.transform);
+                }
             }
             else
             {
-                playerObj = new GameObject("Player_ShopperCartFighter");
+                playerObj = new GameObject("Player");
                 playerObj.tag = "Player";
                 playerObj.transform.position = spawnPosition;
                 playerObj.transform.rotation = spawnRotation;
@@ -63,7 +72,7 @@ namespace CartCombat.Player
             if (objAsset != null)
             {
                 modelInstance = Object.Instantiate(objAsset, playerRoot);
-                modelInstance.name = "ShopperCartFighter_Mesh";
+                modelInstance.name = "CartModel";
                 modelInstance.transform.localPosition = Vector3.zero;
                 modelInstance.transform.localRotation = Quaternion.identity;
 
@@ -87,18 +96,52 @@ namespace CartCombat.Player
             Material bumperMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Store/Mat_CheckoutCounter.mat");
             Material trimMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Store/Mat_StoreTrim.mat");
 
+            Shader litShader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard") ?? Shader.Find("Unlit/Color");
+
             foreach (Renderer r in renderers)
             {
-                if (r.name.Contains("Cart") && shelfMat != null)
+                string n = r.name.ToLower();
+                if (n.Contains("metal") || (n.Contains("cart") && !n.Contains("bumper")))
                 {
-                    r.sharedMaterial = shelfMat;
+                    if (shelfMat != null) r.sharedMaterial = shelfMat;
                 }
-                else if (bumperMat != null)
+                else if (n.Contains("bumper"))
                 {
-                    r.sharedMaterial = bumperMat;
+                    if (bumperMat != null) r.sharedMaterial = bumperMat;
+                }
+                else if (n.Contains("skin"))
+                {
+                    r.sharedMaterial = CreateMat(litShader, "Mat_PlayerSkin", new Color(0.92f, 0.72f, 0.58f));
+                }
+                else if (n.Contains("jacket"))
+                {
+                    r.sharedMaterial = CreateMat(litShader, "Mat_PlayerJacket", new Color(0.18f, 0.38f, 0.72f));
+                }
+                else if (n.Contains("cap"))
+                {
+                    r.sharedMaterial = CreateMat(litShader, "Mat_PlayerCap", new Color(0.85f, 0.15f, 0.15f));
+                }
+                else if (n.Contains("pants"))
+                {
+                    r.sharedMaterial = CreateMat(litShader, "Mat_PlayerPants", new Color(0.22f, 0.25f, 0.30f));
+                }
+                else if (n.Contains("shirt"))
+                {
+                    r.sharedMaterial = CreateMat(litShader, "Mat_PlayerShirt", new Color(0.95f, 0.95f, 0.95f));
+                }
+                else if (trimMat != null)
+                {
+                    r.sharedMaterial = trimMat;
                 }
             }
 #endif
+        }
+
+        private static Material CreateMat(Shader shader, string name, Color color)
+        {
+            Material m = new Material(shader) { name = name, color = color };
+            if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", color);
+            return m;
         }
 
         private static void BuildProceduralVisualFallback(Transform parent)

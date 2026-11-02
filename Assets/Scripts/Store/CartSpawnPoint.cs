@@ -23,8 +23,11 @@ namespace CartCombat.Store
             gameObject.name = isPlayer ? "SpawnPoint_Player" : $"SpawnPoint_Rival_{index}";
         }
 
-        private void OnDrawGizmos()
+        // Gizmo visuals disabled for a clean, unobstructed scene view
+        // To re-enable when setting up spawn points, change to OnDrawGizmosSelected
+        private void OnDrawGizmosSelected()
         {
+            // Only visible if explicitly selected in Hierarchy
             Gizmos.color = isPlayer ? new Color(0.1f, 0.9f, 0.2f, 0.9f) : new Color(0.9f, 0.2f, 0.1f, 0.9f);
             
             // Draw base disc/sphere

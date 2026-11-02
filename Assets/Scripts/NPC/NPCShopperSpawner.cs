@@ -92,14 +92,84 @@ namespace CartCombat.NPC
         {
             if (aisleCorridorWaypoints.Count == 0) BuildAisleWaypoints();
 
+            // Check if NPCs already exist in the scene so we don't duplicate
+            NPCShopperAI[] existing = GetComponentsInChildren<NPCShopperAI>();
+            if (existing != null && existing.Length >= npcCount)
+            {
+                foreach (NPCShopperAI ai in existing)
+                {
+                    if (ai != null && (ai.AisleWaypoints == null || ai.AisleWaypoints.Count == 0))
+                    {
+                        ai.AisleWaypoints = new List<Vector3>(aisleCorridorWaypoints);
+                    }
+                }
+                Debug.Log($"[NPC Spawner] {existing.Length} shoppers already present in scene. Waypoints linked.");
+                return;
+            }
+
+            Transform container = transform.Find("Customers");
+            if (container == null) container = transform.Find("Shoppers");
+            if (container == null)
+            {
+                GameObject cObj = new GameObject("Customers");
+                cObj.transform.SetParent(transform, false);
+                container = cObj.transform;
+            }
+            else
+            {
+                container.name = "Customers";
+            }
+
             for (int i = 0; i < npcCount; i++)
             {
                 // Distribute across corridors evenly
                 Vector3 spawnPos = PickSpawnPosition(i);
-                BuildNPC(i, spawnPos);
+                GameObject npc = BuildNPC(i, spawnPos);
+                if (npc != null)
+                {
+                    npc.transform.SetParent(container, true);
+                }
             }
             Debug.Log($"[NPC Spawner] Spawned {npcCount} shoppers in aisle corridors.");
         }
+
+        public void ClearSpawnedNPCs()
+        {
+            Transform container = transform.Find("Shoppers");
+            if (container != null)
+            {
+                if (Application.isPlaying) Destroy(container.gameObject);
+                else DestroyImmediate(container.gameObject);
+            }
+
+            NPCShopperAI[] all = Object.FindObjectsByType<NPCShopperAI>(FindObjectsSortMode.None);
+            foreach (NPCShopperAI ai in all)
+            {
+                if (ai != null)
+                {
+                    if (Application.isPlaying) Destroy(ai.gameObject);
+                    else DestroyImmediate(ai.gameObject);
+                }
+            }
+        }
+
+#if UNITY_EDITOR
+        [ContextMenu("Spawn Shoppers in Scene")]
+        public void SpawnShoppersInEditor()
+        {
+            EnsureShelfColliders();
+            BuildAisleWaypoints();
+            SpawnAll();
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+        }
+
+        [ContextMenu("Clear Shoppers from Scene")]
+        public void ClearShoppersInEditor()
+        {
+            ClearSpawnedNPCs();
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+        }
+#endif
 
         // ── Shelf Collider Fix ────────────────────────────────────────────────
 
@@ -285,7 +355,7 @@ namespace CartCombat.NPC
             Color shoes  = ShoeColors  [index % ShoeColors.Length];
 
             // ── Root ──────────────────────────────────────────────────────
-            GameObject root = new GameObject($"NPC_Shopper_{index:D2}");
+            GameObject root = new GameObject($"Customer_{index + 1:D2}");
             root.tag = "NPC";
             // Place on floor — CharacterController.center.y = height/2 → bottom at 0
             root.transform.position = new Vector3(position.x, 0f, position.z);
@@ -507,15 +577,20 @@ namespace CartCombat.NPC
 
             // Remove collider — the CharacterController on root handles collisions
             Collider col = go.GetComponent<Collider>();
-            if (col != null) Object.Destroy(col);
+            if (col != null)
+            {
+                if (Application.isPlaying) Object.Destroy(col);
+                else Object.DestroyImmediate(col);
+            }
 
             return go;
         }
 
         // ── Gizmos ──────────────────────────────────────────────────────────
 
-        private void OnDrawGizmos()
+        private void OnDrawGizmosSelected()
         {
+            // Only visible if explicitly selected in Hierarchy
             Gizmos.color = new Color(0.2f, 1f, 0.5f, 0.25f);
             foreach (var wp in aisleCorridorWaypoints)
                 Gizmos.DrawSphere(wp, 0.22f);
