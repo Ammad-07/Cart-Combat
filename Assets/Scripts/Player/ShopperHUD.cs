@@ -72,6 +72,10 @@ namespace CartCombat.Player
         {
             player = GetComponent<CartPlayerController>();
             BuildCanvas();
+            if (canvasGO != null)
+            {
+                canvasGO.SetActive(StartScreenManager.IsGameStarted);
+            }
         }
 
         private void Update()
@@ -114,6 +118,16 @@ namespace CartCombat.Player
         private void RefreshHUD()
         {
             if (player == null) return;
+
+            // Hide HUD while splash screen is showing
+            if (canvasGO != null)
+            {
+                if (canvasGO.activeSelf != StartScreenManager.IsGameStarted)
+                {
+                    canvasGO.SetActive(StartScreenManager.IsGameStarted);
+                }
+            }
+            if (!StartScreenManager.IsGameStarted) return;
 
             // Automatically sync health directly with player state
             playerHealth = player.Health;

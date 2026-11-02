@@ -138,6 +138,12 @@ namespace CartCombat.Player
             if (maxHealth <= 0f) maxHealth = 100f;
             if (hud != null) hud.SetHealth(playerHealth, maxHealth);
 
+            // Attach StartScreenManager for the splash screen
+            if (gameObject.GetComponent<StartScreenManager>() == null)
+            {
+                gameObject.AddComponent<StartScreenManager>();
+            }
+
             // Hide any duplicate human character meshes on the cart so only the pure cart is used
             SetCartCharacterMeshesActive(false);
         }
@@ -165,6 +171,8 @@ namespace CartCombat.Player
 
         private void Update()
         {
+            if (!StartScreenManager.IsGameStarted) return;
+
             HandleMovement();
             HandleActions();
             ResolveCustomerPushback();

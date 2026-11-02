@@ -52,7 +52,7 @@ namespace CartCombat.Player
                 characterBody = transform.parent;
             }
 
-            if (lockCursor)
+            if (lockCursor && StartScreenManager.IsGameStarted)
             {
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
@@ -65,6 +65,8 @@ namespace CartCombat.Player
 
         private void Update()
         {
+            if (!StartScreenManager.IsGameStarted) return;
+
             HandleInput();
             ApplyRotation();
             UpdateViewPosition();
