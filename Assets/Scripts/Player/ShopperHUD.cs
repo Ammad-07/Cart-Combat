@@ -115,6 +115,10 @@ namespace CartCombat.Player
         {
             if (player == null) return;
 
+            // Automatically sync health directly with player state
+            playerHealth = player.Health;
+            maxHealth = player.MaxHealth;
+
             // Health bar fill & numeric label
             float hpFrac = Mathf.Clamp01(playerHealth / Mathf.Max(1f, maxHealth));
             if (healthFill != null)
@@ -168,20 +172,20 @@ namespace CartCombat.Player
                 }
                 else
                 {
-                    basketItemText.text = "HANDS: <color=#00FF88>FISTS (PUNCH READY)</color>";
+                    basketItemText.text = "HANDS: <color=#00FF88>FISTS (BODY FIGHT READY)</color>";
                 }
             }
             if (basketHintText != null)
             {
                 if (held != null)
                 {
-                    basketHintText.text = $"DURABILITY: <color=#33FF77>{held.CurrentDurability}/{held.MaxDurability}</color>  ·  [Tab] Swap  [Q] Drop";
+                    basketHintText.text = $"DURABILITY: <color=#33FF77>{held.CurrentDurability}/{held.MaxDurability}</color>  ·  [F] Swing  ·  [T] Throw  ·  [Q] Drop";
                 }
                 else
                 {
                     basketHintText.text = player.IsPushingCart
-                        ? "[E] Grab Item  ·  [LMB] Body Punch  ·  [X] Leave Cart"
-                        : "[E] Grab Item  ·  [LMB] Body Punch  ·  [X] Push Cart";
+                        ? "[G] Body Attack  ·  [E] Grab Item  ·  [X] Leave Cart"
+                        : "[G] Body Attack  ·  [E] Grab Item  ·  [X] Push Cart";
                 }
             }
 
@@ -214,22 +218,22 @@ namespace CartCombat.Player
                 {
                     if (held != null)
                     {
-                        actionPrompt.text = "<b><color=#00E5FF>[LMB]</color></b> Swing Weapon   <b><color=#00E5FF>[RMB]</color></b> Throw   <b><color=#FF7777>[Q]</color></b> Drop   <b><color=#00FF88>[X]</color></b> Leave Cart";
+                        actionPrompt.text = "<b><color=#00E5FF>[F]</color></b> Swing Weapon   <b><color=#00E5FF>[T]</color></b> Throw   <b><color=#FF7777>[Q]</color></b> Drop   <b><color=#00FF88>[X]</color></b> Leave Cart";
                     }
                     else
                     {
-                        actionPrompt.text = "<b><color=#00E5FF>[LMB]</color></b> Body Punch   <b><color=#FFD600>[Shift]</color></b> Ram   <b><color=#FFD600>[E]</color></b> Grab Item   <b><color=#00FF88>[X]</color></b> Leave Cart";
+                        actionPrompt.text = "<b><color=#00E5FF>[G]</color></b> Body Attack   <b><color=#FFD600>[Shift]</color></b> Ram   <b><color=#FFD600>[E]</color></b> Grab Item   <b><color=#00FF88>[X]</color></b> Leave Cart";
                     }
                 }
                 else
                 {
                     if (held != null)
                     {
-                        actionPrompt.text = "<b><color=#00E5FF>[LMB]</color></b> Swing Weapon   <b><color=#00E5FF>[RMB]</color></b> Throw   <b><color=#FF7777>[Q]</color></b> Drop   <b><color=#00FF88>[X]</color></b> Push Cart";
+                        actionPrompt.text = "<b><color=#00E5FF>[F]</color></b> Swing Weapon   <b><color=#00E5FF>[T]</color></b> Throw   <b><color=#FF7777>[Q]</color></b> Drop   <b><color=#00FF88>[X]</color></b> Push Cart";
                     }
                     else
                     {
-                        actionPrompt.text = "<b><color=#00E5FF>[LMB]</color></b> Body Punch   <b><color=#FFD600>[E]</color></b> Grab Item   <b><color=#00FF88>[X]</color></b> Push Cart";
+                        actionPrompt.text = "<b><color=#00E5FF>[G]</color></b> Body Attack   <b><color=#FFD600>[E]</color></b> Grab Item   <b><color=#00FF88>[X]</color></b> Push Cart";
                     }
                 }
             }

@@ -134,7 +134,17 @@ namespace CartCombat.Player
             // Attach HUD
             hud = gameObject.GetComponent<ShopperHUD>();
             if (hud == null) hud = gameObject.AddComponent<ShopperHUD>();
+            if (playerHealth <= 0f) playerHealth = 100f;
+            if (maxHealth <= 0f) maxHealth = 100f;
             if (hud != null) hud.SetHealth(playerHealth, maxHealth);
+
+            // Hide any duplicate human character meshes on the cart so only the pure cart is used
+            SetCartCharacterMeshesActive(false);
+        }
+
+        private void Start()
+        {
+            SetCartCharacterMeshesActive(false);
         }
 
         private void EnsureCartPhysicalCollider()
@@ -228,34 +238,49 @@ namespace CartCombat.Player
 
         private void HandleActions()
         {
+            bool swingPressed = false;
+            bool throwPressed = false;
+            bool attackPressed = false;
             bool grabPressed = false;
             bool dropPressed = false;
-            bool attackPressed = false;
-            bool throwPressed = false;
             bool swapPressed = false;
             bool toggleCartPressed = false;
 
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null)
             {
+                swingPressed = Keyboard.current.fKey.wasPressedThisFrame;
+                throwPressed = Keyboard.current.tKey.wasPressedThisFrame;
+                attackPressed = Keyboard.current.gKey.wasPressedThisFrame;
                 grabPressed = Keyboard.current.eKey.wasPressedThisFrame;
-                dropPressed = Keyboard.current.qKey.wasPressedThisFrame || Keyboard.current.gKey.wasPressedThisFrame;
-                attackPressed = Keyboard.current.fKey.wasPressedThisFrame;
+                dropPressed = Keyboard.current.qKey.wasPressedThisFrame;
                 swapPressed = Keyboard.current.tabKey.wasPressedThisFrame;
                 toggleCartPressed = Keyboard.current.xKey.wasPressedThisFrame;
             }
             if (Mouse.current != null)
             {
-                if (Mouse.current.leftButton.wasPressedThisFrame) attackPressed = true;
+                if (Mouse.current.leftButton.wasPressedThisFrame)
+                {
+                    if (heldItem != null) swingPressed = true;
+                    else attackPressed = true;
+                }
                 if (Mouse.current.rightButton.wasPressedThisFrame) throwPressed = true;
             }
 #else
+            swingPressed = Input.GetKeyDown(KeyCode.F);
+            throwPressed = Input.GetKeyDown(KeyCode.T);
+            attackPressed = Input.GetKeyDown(KeyCode.G);
             grabPressed = Input.GetKeyDown(KeyCode.E);
-            dropPressed = Input.GetKeyDown(KeyCode.Q) || Input.GetKeyDown(KeyCode.G);
-            attackPressed = Input.GetKeyDown(KeyCode.F) || Input.GetMouseButtonDown(0);
-            throwPressed = Input.GetMouseButtonDown(1);
+            dropPressed = Input.GetKeyDown(KeyCode.Q);
             swapPressed = Input.GetKeyDown(KeyCode.Tab);
             toggleCartPressed = Input.GetKeyDown(KeyCode.X);
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (heldItem != null) swingPressed = true;
+                else attackPressed = true;
+            }
+            if (Input.GetMouseButtonDown(1)) throwPressed = true;
 #endif
 
             // 1. Leave Cart / Re-grab Cart ([X])
@@ -278,14 +303,14 @@ namespace CartCombat.Player
                 }
             }
 
-            // 3. Ungrab / Drop currently held item onto the ground ([Q])
+            // 3. Drop currently held item onto the ground ([Q])
             if (dropPressed)
             {
                 DropHeldItem();
             }
 
-            // 4. Attack: Melee weapon swing (if holding weapon), Cart Ram (if sprinting with cart), or Unarmed Body Punch!
-            if (attackPressed)
+            // 4. Swing held weapon ([F])
+            if (swingPressed)
             {
                 if (heldItem != null)
                 {
@@ -293,32 +318,36 @@ namespace CartCombat.Player
                 }
                 else
                 {
-                    // Check if player is sprinting with cart to do a high-speed Ram Attack
-                    bool isSprinting = false;
-#if ENABLE_INPUT_SYSTEM
-                    if (Keyboard.current != null) isSprinting = Keyboard.current.leftShiftKey.isPressed;
-#else
-                    isSprinting = Input.GetKey(KeyCode.LeftShift);
-#endif
-                    if (isPushingCart && isSprinting && controller.velocity.magnitude > 6.0f)
-                    {
-                        TryRamAttack();
-                    }
-                    else
-                    {
-                        // Unarmed body combat! Punches and strikes using body
-                        TryUnarmedPunch();
-                    }
+                    TryUnarmedPunch();
                 }
             }
 
-            // 5. Throw held item as a projectile ([RMB])
+            // 5. Body Attack / Punch ([G]) (or Ram if sprinting with cart)
+            if (attackPressed)
+            {
+                bool isSprinting = false;
+#if ENABLE_INPUT_SYSTEM
+                if (Keyboard.current != null) isSprinting = Keyboard.current.leftShiftKey.isPressed;
+#else
+                isSprinting = Input.GetKey(KeyCode.LeftShift);
+#endif
+                if (isPushingCart && isSprinting && controller.velocity.magnitude > 6.0f)
+                {
+                    TryRamAttack();
+                }
+                else
+                {
+                    TryUnarmedPunch();
+                }
+            }
+
+            // 6. Throw held item as a projectile ([T] or [RMB])
             if (throwPressed && heldItem != null)
             {
                 ThrowHeldItem();
             }
 
-            // 6. Swap held item with basket item ([Tab])
+            // 7. Swap held item with basket item ([Tab])
             if (swapPressed)
             {
                 CycleBasketItem();
@@ -356,6 +385,9 @@ namespace CartCombat.Player
 
             isPushingCart = false;
 
+            // Hide the duplicate character body clone so only the clean empty shopping cart stays parked!
+            SetCartCharacterMeshesActive(false);
+
             // Detach cart model so it stays parked in the world
             cartModelTransform.SetParent(null, true);
 
@@ -379,8 +411,31 @@ namespace CartCombat.Player
             cartModelTransform.localPosition = Vector3.zero;
             cartModelTransform.localRotation = Quaternion.identity;
 
+            // Keep character body hidden so POV first-person camera has an unobstructed view
+            SetCartCharacterMeshesActive(false);
+
             isPushingCart = true;
             Debug.Log("<color=#00FF88><b>[Cart Combat]</b> Re-grabbed shopping cart! Ready to roll.</color>");
+        }
+
+        private void SetCartCharacterMeshesActive(bool active)
+        {
+            if (cartModelTransform == null) return;
+
+            Renderer[] renderers = cartModelTransform.GetComponentsInChildren<Renderer>(true);
+            foreach (Renderer r in renderers)
+            {
+                string n = r.name.ToLower();
+                // Check if this renderer is part of the human shopper body (skin, jacket, shirt, pants, shoes, head, etc.)
+                if (n.Contains("character") || n.Contains("jacket") || n.Contains("shirt") ||
+                    n.Contains("skin") || n.Contains("cap") || n.Contains("goggles") ||
+                    n.Contains("pants") || n.Contains("shoes") || n.Contains("gloves") ||
+                    n.Contains("head") || n.Contains("torso") || n.Contains("arm") || n.Contains("leg") ||
+                    n.Contains("collar") || n.Contains("hair") || n.Contains("thigh") || n.Contains("calf"))
+                {
+                    r.gameObject.SetActive(active);
+                }
+            }
         }
 
         // ── Unarmed Body Combat ──────────────────────────────────────────────

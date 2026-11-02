@@ -551,6 +551,28 @@ namespace CartCombat.NPC
                 new Vector3(0.055f, 0.13f, 0.04f), Vector3.one * 0.08f,
                 grocColors[(index + 1) % grocColors.Length]);
 
+            // ── Held Grocery Weapon in Right Hand ────────────────────────
+            Transform handRTrans = visual.transform.Find("Hand_R");
+            if (handRTrans != null)
+            {
+                CartCombat.Store.GroceryItemType[] npcWeaponTypes = new CartCombat.Store.GroceryItemType[]
+                {
+                    CartCombat.Store.GroceryItemType.Baguette,
+                    CartCombat.Store.GroceryItemType.Fish,
+                    CartCombat.Store.GroceryItemType.Banana,
+                    CartCombat.Store.GroceryItemType.SodaCan,
+                    CartCombat.Store.GroceryItemType.CerealBox,
+                    CartCombat.Store.GroceryItemType.Chips
+                };
+                CartCombat.Store.GroceryItemType wType = npcWeaponTypes[index % npcWeaponTypes.Length];
+                GameObject wep = CartCombat.Store.GroceryItemFactory.CreateItem(wType, handRTrans.position + handRTrans.forward * 0.12f, handRTrans.rotation * Quaternion.Euler(45f, 0f, 0f), handRTrans);
+                wep.name = "Customer_HeldWeapon";
+                Rigidbody wrb = wep.GetComponent<Rigidbody>();
+                if (wrb != null) wrb.isKinematic = true;
+                Collider wcol = wep.GetComponent<Collider>();
+                if (wcol != null) wcol.enabled = false;
+            }
+
             // ── AI components ─────────────────────────────────────────────
             NPCShopperHealth healthComp = root.AddComponent<NPCShopperHealth>();
             NPCShopperAI    aiComp     = root.AddComponent<NPCShopperAI>();

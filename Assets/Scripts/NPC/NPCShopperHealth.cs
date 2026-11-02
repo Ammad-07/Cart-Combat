@@ -21,13 +21,13 @@ namespace CartCombat.NPC
 
         [Header("Fight-Back")]
         [SerializeField] private float fightBackThreshold  = 60f;  // enter fight mode below this
-        [SerializeField] private float counterAttackDamage = 14f;
-        [SerializeField] private float counterAttackRange  = 2.2f;
-        [SerializeField] private float counterAttackCooldown = 1.8f;
+        [SerializeField] private float counterAttackDamage = 5.0f; // 5% damage per hit (5 HP out of 100)
+        [SerializeField] private float counterAttackRange  = 2.4f;
+        [SerializeField] private float counterAttackCooldown = 1.4f;
 
         [Header("Cart Bump Aggro")]
         [SerializeField] private int bumpCount = 0;
-        [SerializeField] private int bumpsToAggro = 2; // Hits 2 to 3 times to get angry!
+        [SerializeField] private int bumpsToAggro = 3; // Enrage strictly after 3 hits!
         [SerializeField] private bool isEnraged = false;
         private float lastBumpTime = -10f;
 
@@ -51,7 +51,7 @@ namespace CartCombat.NPC
         private void Awake()
         {
             currentHealth = maxHealth;
-            bumpsToAggro = Random.Range(2, 4); // 2 or 3 bumps triggers enraged fight!
+            bumpsToAggro = 3; // Trigger fight strictly on the 3rd hit!
             ai = GetComponent<NPCShopperAI>();
 
             // Cache body renderers and their original material colours
@@ -100,20 +100,55 @@ namespace CartCombat.NPC
             lastCounterTime = Time.time;
             StartCoroutine(CounterFlash());
 
-            // Deal damage to player controller
+            // Animate swing if customer has a grocery item or basket in hand
+            Transform heldItem = transform.Find("Visual/Hand_R/Customer_HeldWeapon")
+                              ?? transform.Find("Visual/ShoppingBasket")
+                              ?? transform.Find("Visual/Hand_R");
+            if (heldItem != null)
+            {
+                StartCoroutine(AnimateCustomerSwing(heldItem));
+            }
+
+            // Deal 5% damage to player controller (5 HP out of 100)
             CartCombat.Player.CartPlayerController pc = target.GetComponentInParent<CartCombat.Player.CartPlayerController>();
             if (pc != null)
             {
                 pc.TakeDamage(counterAttackDamage, transform.forward);
             }
 
-            Debug.Log($"<color=#FF3333><b>[Customer Combat]</b></color> {name} strikes player for {counterAttackDamage:F0} dmg!");
+            string weaponName = (heldItem != null && heldItem.name.Contains("Weapon")) ? "held grocery weapon" : "fist strike";
+            Debug.Log($"<color=#FF3333><b>[Customer Combat]</b></color> {name} strikes player with {weaponName} for {counterAttackDamage:F0} dmg (5% HP)! Player HP: {pc?.Health:F0}");
             return true;
+        }
+
+        private IEnumerator AnimateCustomerSwing(Transform itemTrans)
+        {
+            Quaternion origRot = itemTrans.localRotation;
+            Quaternion swingRot = origRot * Quaternion.Euler(60f, -25f, 0f);
+
+            float dur = 0.12f;
+            float el = 0f;
+            while (el < dur)
+            {
+                itemTrans.localRotation = Quaternion.Slerp(origRot, swingRot, el / dur);
+                el += Time.deltaTime;
+                yield return null;
+            }
+
+            el = 0f;
+            while (el < dur)
+            {
+                itemTrans.localRotation = Quaternion.Slerp(swingRot, origRot, el / dur);
+                el += Time.deltaTime;
+                yield return null;
+            }
+
+            itemTrans.localRotation = origRot;
         }
 
         /// <summary>
         /// Called when the player's cart bumps into the customer.
-        /// After 2 to 3 hits, the customer gets angry, turns, and fights back!
+        /// After exactly 3 hits, the customer gets angry, turns, and fights back!
         /// </summary>
         public void RegisterCartBump(Vector3 hitDirection, float speed, bool wasRam)
         {
@@ -124,13 +159,13 @@ namespace CartCombat.NPC
             bumpCount++;
             Debug.Log($"<color=#FF9900><b>[Customer Bump]</b></color> {name} hit by cart ({bumpCount}/{bumpsToAggro}) at speed {speed:F1} m/s");
 
-            float dmg = wasRam ? 30f : 8f;
+            float dmg = wasRam ? 25f : 8f;
             currentHealth = Mathf.Max(1f, currentHealth - dmg);
 
             if (!isFlashing) StartCoroutine(HitFlash());
             ApplyKnockback(hitDirection * (wasRam ? 1.6f : 1.0f));
 
-            if (bumpCount >= bumpsToAggro || wasRam)
+            if (bumpCount >= 3 || wasRam)
             {
                 TriggerEnragedFight(hitDirection);
             }

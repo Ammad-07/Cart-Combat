@@ -393,7 +393,7 @@ namespace CartCombat.NPC
             rb.linearVelocity = throwDir * thrownItemForce;
             rb.AddTorque(Random.insideUnitSphere * 12f, ForceMode.Impulse);
 
-            throwable.AddComponent<NPCThrowableProjectile>().Initialize(player, 12f);
+            throwable.AddComponent<NPCThrowableProjectile>().Initialize(player, 5f);
 
             Object.Destroy(throwable, 5f);
             Debug.Log($"[NPC] {name} throws item at player!");
