@@ -369,6 +369,15 @@ namespace CartCombat.NPC
             cc.stepOffset = 0.38f;
             cc.slopeLimit = 45f;
 
+            // Dedicated physical BodyCollider so player cart physically bumps and blocks against customer
+            GameObject colChild = new GameObject("BodyCollider");
+            colChild.transform.SetParent(root.transform, false);
+            colChild.transform.localPosition = Vector3.zero;
+            CapsuleCollider capCol = colChild.AddComponent<CapsuleCollider>();
+            capCol.height = 1.75f;
+            capCol.radius = 0.42f;
+            capCol.center = new Vector3(0f, 0.875f, 0f);
+
             // ── Visual root ───────────────────────────────────────────────
             GameObject visual = new GameObject("Visual");
             visual.transform.SetParent(root.transform, false);

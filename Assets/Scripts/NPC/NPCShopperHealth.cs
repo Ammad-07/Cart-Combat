@@ -22,8 +22,14 @@ namespace CartCombat.NPC
         [Header("Fight-Back")]
         [SerializeField] private float fightBackThreshold  = 60f;  // enter fight mode below this
         [SerializeField] private float counterAttackDamage = 14f;
-        [SerializeField] private float counterAttackRange  = 2.0f;
-        [SerializeField] private float counterAttackCooldown = 2.2f;
+        [SerializeField] private float counterAttackRange  = 2.2f;
+        [SerializeField] private float counterAttackCooldown = 1.8f;
+
+        [Header("Cart Bump Aggro")]
+        [SerializeField] private int bumpCount = 0;
+        [SerializeField] private int bumpsToAggro = 2; // Hits 2 to 3 times to get angry!
+        [SerializeField] private bool isEnraged = false;
+        private float lastBumpTime = -10f;
 
         // References
         private NPCShopperAI ai;
@@ -37,13 +43,15 @@ namespace CartCombat.NPC
 
         public bool  IsDead       => isDead;
         public float HealthPercent => currentHealth / maxHealth;
-        public bool  IsAggressive  => currentHealth < fightBackThreshold && !isDead;
+        public bool  IsAggressive  => (isEnraged || currentHealth < fightBackThreshold) && !isDead;
+        public int   BumpCount     => bumpCount;
 
         // ── Unity ────────────────────────────────────────────────────────────
 
         private void Awake()
         {
             currentHealth = maxHealth;
+            bumpsToAggro = Random.Range(2, 4); // 2 or 3 bumps triggers enraged fight!
             ai = GetComponent<NPCShopperAI>();
 
             // Cache body renderers and their original material colours
@@ -92,9 +100,69 @@ namespace CartCombat.NPC
             lastCounterTime = Time.time;
             StartCoroutine(CounterFlash());
 
-            // Extend when you add a PlayerHealth component
-            Debug.Log($"[NPC] {name} counter-attacks for {counterAttackDamage:F0} dmg!");
+            // Deal damage to player controller
+            CartCombat.Player.CartPlayerController pc = target.GetComponentInParent<CartCombat.Player.CartPlayerController>();
+            if (pc != null)
+            {
+                pc.TakeDamage(counterAttackDamage, transform.forward);
+            }
+
+            Debug.Log($"<color=#FF3333><b>[Customer Combat]</b></color> {name} strikes player for {counterAttackDamage:F0} dmg!");
             return true;
+        }
+
+        /// <summary>
+        /// Called when the player's cart bumps into the customer.
+        /// After 2 to 3 hits, the customer gets angry, turns, and fights back!
+        /// </summary>
+        public void RegisterCartBump(Vector3 hitDirection, float speed, bool wasRam)
+        {
+            if (isDead) return;
+            if (Time.time < lastBumpTime + 0.35f) return;
+            lastBumpTime = Time.time;
+
+            bumpCount++;
+            Debug.Log($"<color=#FF9900><b>[Customer Bump]</b></color> {name} hit by cart ({bumpCount}/{bumpsToAggro}) at speed {speed:F1} m/s");
+
+            float dmg = wasRam ? 30f : 8f;
+            currentHealth = Mathf.Max(1f, currentHealth - dmg);
+
+            if (!isFlashing) StartCoroutine(HitFlash());
+            ApplyKnockback(hitDirection * (wasRam ? 1.6f : 1.0f));
+
+            if (bumpCount >= bumpsToAggro || wasRam)
+            {
+                TriggerEnragedFight(hitDirection);
+            }
+            else
+            {
+                if (ai != null) ai.OnHurt(hitDirection, 0.45f);
+            }
+        }
+
+        public void TriggerEnragedFight(Vector3 hitDirection)
+        {
+            if (isDead || isEnraged) return;
+            isEnraged = true;
+            fightBackThreshold = maxHealth + 10f;
+            Debug.Log($"<color=#FF2222><b>[CUSTOMER ENRAGED!]</b> {name} has been hit {bumpCount} times and is now FIGHTING back!</color>");
+
+            StartCoroutine(AngerYellFlash());
+            if (ai != null)
+            {
+                ai.SetAggressiveState();
+            }
+        }
+
+        private IEnumerator AngerYellFlash()
+        {
+            for (int f = 0; f < 3; f++)
+            {
+                SetAllBodyColor(new Color(1f, 0.15f, 0.05f));
+                yield return new WaitForSeconds(0.12f);
+                RestoreBodyColors();
+                yield return new WaitForSeconds(0.10f);
+            }
         }
 
         // ── Private ──────────────────────────────────────────────────────────

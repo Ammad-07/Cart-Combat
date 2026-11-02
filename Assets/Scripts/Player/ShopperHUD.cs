@@ -132,9 +132,16 @@ namespace CartCombat.Player
             float speed = cc != null ? cc.velocity.magnitude : 0f;
             if (speedText != null)
             {
-                speedText.text = player.IsRamming
-                    ? "<color=#FFD600>⚡ RAM BOOST!</color>"
-                    : $"🛒 {speed:F1} m/s";
+                if (!player.IsPushingCart)
+                {
+                    speedText.text = $"🏃 {speed:F1} m/s";
+                }
+                else
+                {
+                    speedText.text = player.IsRamming
+                        ? "<color=#FFD600>⚡ RAM BOOST!</color>"
+                        : $"🛒 {speed:F1} m/s";
+                }
             }
 
             // Score
@@ -148,7 +155,9 @@ namespace CartCombat.Player
             int basketCount = player.CarriedItems.Count;
             if (basketTitleText != null)
             {
-                basketTitleText.text = $"CART BASKET  <b>({basketCount}/3)</b>";
+                basketTitleText.text = player.IsPushingCart
+                    ? $"CART BASKET  <b>({basketCount}/3)</b>"
+                    : "ON FOOT  <b>(CART PARKED)</b>";
             }
             if (basketItemText != null)
             {
@@ -159,7 +168,7 @@ namespace CartCombat.Player
                 }
                 else
                 {
-                    basketItemText.text = "HANDS: <color=#AAAAAA>EMPTY (RAM ONLY)</color>";
+                    basketItemText.text = "HANDS: <color=#00FF88>FISTS (PUNCH READY)</color>";
                 }
             }
             if (basketHintText != null)
@@ -170,7 +179,9 @@ namespace CartCombat.Player
                 }
                 else
                 {
-                    basketHintText.text = "[E] Grab Weapon   ·   [LMB] Ram Attack";
+                    basketHintText.text = player.IsPushingCart
+                        ? "[E] Grab Item  ·  [LMB] Body Punch  ·  [X] Leave Cart"
+                        : "[E] Grab Item  ·  [LMB] Body Punch  ·  [X] Push Cart";
                 }
             }
 
@@ -199,13 +210,27 @@ namespace CartCombat.Player
             // Action prompt pill (centered bottom)
             if (actionPrompt != null)
             {
-                if (held != null)
+                if (player.IsPushingCart)
                 {
-                    actionPrompt.text = "<b><color=#00E5FF>[LMB]</color></b> Swing / Hit   <b><color=#00E5FF>[RMB]</color></b> Throw   <b><color=#FF7777>[Q]</color></b> Drop   <b><color=#FFD600>[E]</color></b> Grab";
+                    if (held != null)
+                    {
+                        actionPrompt.text = "<b><color=#00E5FF>[LMB]</color></b> Swing Weapon   <b><color=#00E5FF>[RMB]</color></b> Throw   <b><color=#FF7777>[Q]</color></b> Drop   <b><color=#00FF88>[X]</color></b> Leave Cart";
+                    }
+                    else
+                    {
+                        actionPrompt.text = "<b><color=#00E5FF>[LMB]</color></b> Body Punch   <b><color=#FFD600>[Shift]</color></b> Ram   <b><color=#FFD600>[E]</color></b> Grab Item   <b><color=#00FF88>[X]</color></b> Leave Cart";
+                    }
                 }
                 else
                 {
-                    actionPrompt.text = "<b><color=#00E5FF>[LMB] / [F]</color></b> Ram Attack     <b><color=#FFD600>[E]</color></b> Grab Grocery Weapon";
+                    if (held != null)
+                    {
+                        actionPrompt.text = "<b><color=#00E5FF>[LMB]</color></b> Swing Weapon   <b><color=#00E5FF>[RMB]</color></b> Throw   <b><color=#FF7777>[Q]</color></b> Drop   <b><color=#00FF88>[X]</color></b> Push Cart";
+                    }
+                    else
+                    {
+                        actionPrompt.text = "<b><color=#00E5FF>[LMB]</color></b> Body Punch   <b><color=#FFD600>[E]</color></b> Grab Item   <b><color=#00FF88>[X]</color></b> Push Cart";
+                    }
                 }
             }
         }

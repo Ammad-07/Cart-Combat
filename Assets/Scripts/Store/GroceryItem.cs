@@ -36,7 +36,6 @@ namespace CartCombat.Store
     /// grabbed by the player, wielded as a melee weapon (hit/swing), thrown as a physics projectile,
     /// or dropped/ungrabbed back into the store.
     /// </summary>
-    [RequireComponent(typeof(Collider))]
     public class GroceryItem : MonoBehaviour
     {
         [Header("Item Identity")]

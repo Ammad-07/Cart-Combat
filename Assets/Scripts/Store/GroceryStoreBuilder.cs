@@ -140,6 +140,27 @@ namespace CartCombat.Store
                     if (rb != null) rb.isKinematic = true;
                 }
             }
+
+            // Look for Aisles and ensure each aisle's shelves are stocked with 3D items
+            Transform aislesGroup = transform.Find("Aisles");
+            if (aislesGroup != null)
+            {
+                for (int i = 0; i < aislesGroup.childCount; i++)
+                {
+                    Transform aisleTrans = aislesGroup.GetChild(i);
+                    Transform stockedItems = aisleTrans.Find("StockedItems");
+                    if (stockedItems == null || stockedItems.childCount == 0)
+                    {
+                        StoreAisle comp = aisleTrans.GetComponent<StoreAisle>();
+                        if (comp == null) comp = aisleTrans.gameObject.AddComponent<StoreAisle>();
+                        int aisleNum = i + 1;
+                        PopulateShelfItems(comp, aisleTrans, aisleNum, true, 0.55f);
+                        PopulateShelfItems(comp, aisleTrans, aisleNum, false, 0.55f);
+                        PopulateShelfItems(comp, aisleTrans, aisleNum, true, 1.15f);
+                        PopulateShelfItems(comp, aisleTrans, aisleNum, false, 1.15f);
+                    }
+                }
+            }
         }
 
         private void InitializeMaterials()
@@ -739,10 +760,11 @@ namespace CartCombat.Store
 
         private void PopulateShelfItems(StoreAisle aisle, Transform shelf, int aisleNum, bool isLeft, float shelfY)
         {
-            int itemCount = config.itemsPerShelfTier;
-            float stepZ = config.aisleLength / (itemCount + 1);
-            float startZ = -config.aisleLength * 0.5f + stepZ;
-            float width = config.shelvingWidth;
+            int itemCount = (config != null) ? config.itemsPerShelfTier : 5;
+            float aisleLen = (config != null) ? config.aisleLength : 22f;
+            float stepZ = aisleLen / (itemCount + 1);
+            float startZ = -aisleLen * 0.5f + stepZ;
+            float width = (config != null) ? config.shelvingWidth : 2.2f;
 
             // Dedicated items container per aisle with uniform scale (1,1,1) so items are never stretched
             Transform itemsRoot = aisle.transform.Find("StockedItems");

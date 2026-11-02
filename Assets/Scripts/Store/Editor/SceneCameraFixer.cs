@@ -196,6 +196,19 @@ namespace CartCombat.Store.Editor
             Debug.Log("<color=#00FF88><b>[Cart Combat]</b> Professional clean naming applied across Scene and Hierarchy!</color>");
         }
 
+        [MenuItem("Cart Combat/Stock All Shelves & Store Items", false, 5)]
+        public static void StockAllShelves()
+        {
+            GroceryStoreBuilder builder = Object.FindFirstObjectByType<GroceryStoreBuilder>();
+            if (builder != null)
+            {
+                builder.EnsureCustomItemsStocked();
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                SceneView.RepaintAll();
+                Debug.Log("<color=#00FF88><b>[Cart Combat]</b> All 4 Aisles and produce tables have been freshly STOCKED with 3D grocery items!</color>");
+            }
+        }
+
         [InitializeOnLoadMethod]
         private static void AutoCleanOnLoad()
         {
@@ -205,6 +218,7 @@ namespace CartCombat.Store.Editor
                 EnsurePlayerVisible();
                 EnsureShoppersVisible();
                 ApplyCleanNaming();
+                StockAllShelves();
             };
         }
 

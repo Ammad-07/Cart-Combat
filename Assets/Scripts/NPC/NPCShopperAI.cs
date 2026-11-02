@@ -219,6 +219,22 @@ namespace CartCombat.NPC
             if (player != null) FaceTarget(player.position);
         }
 
+        public void SetAggressiveState()
+        {
+            if (player == null)
+            {
+                GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+                if (playerObj != null) player = playerObj.transform;
+            }
+
+            if (player != null)
+            {
+                FaceTarget(player.position);
+            }
+
+            SetState(ShopperState.Fighting);
+        }
+
         public void AddKnockback(Vector3 force) => knockback += force;
 
         public void ResetState()
