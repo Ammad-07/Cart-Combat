@@ -17289,7 +17289,7 @@ MonoBehaviour:
   stunDuration: 0.75
   knockbackForce: 5.5
   fightBackThreshold: 60
-  counterAttackDamage: 14
+  counterAttackDamage: 5
   counterAttackRange: 2
   counterAttackCooldown: 2.2
 --- !u!143 &482461681
@@ -23687,7 +23687,7 @@ MonoBehaviour:
   stunDuration: 0.75
   knockbackForce: 5.5
   fightBackThreshold: 60
-  counterAttackDamage: 14
+  counterAttackDamage: 5
   counterAttackRange: 2
   counterAttackCooldown: 2.2
 --- !u!143 &638575894
@@ -34083,7 +34083,7 @@ MonoBehaviour:
   stunDuration: 0.75
   knockbackForce: 5.5
   fightBackThreshold: 60
-  counterAttackDamage: 14
+  counterAttackDamage: 5
   counterAttackRange: 2
   counterAttackCooldown: 2.2
 --- !u!143 &933061386
@@ -46471,7 +46471,7 @@ MonoBehaviour:
   stunDuration: 0.75
   knockbackForce: 5.5
   fightBackThreshold: 60
-  counterAttackDamage: 14
+  counterAttackDamage: 5
   counterAttackRange: 2
   counterAttackCooldown: 2.2
 --- !u!143 &1231225577
@@ -76052,7 +76052,7 @@ MonoBehaviour:
   stunDuration: 0.75
   knockbackForce: 5.5
   fightBackThreshold: 60
-  counterAttackDamage: 14
+  counterAttackDamage: 5
   counterAttackRange: 2
   counterAttackCooldown: 2.2
 --- !u!143 &2064058245

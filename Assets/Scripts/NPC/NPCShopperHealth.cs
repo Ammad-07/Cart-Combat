@@ -52,6 +52,7 @@ namespace CartCombat.NPC
         {
             currentHealth = maxHealth;
             bumpsToAggro = 3; // Trigger fight strictly on the 3rd hit!
+            counterAttackDamage = 5.0f; // Exactly 5% damage (5 HP per hit)
             ai = GetComponent<NPCShopperAI>();
 
             // Cache body renderers and their original material colours
