@@ -58,7 +58,6 @@ namespace CartCombat.Player
             // Setup POV Camera
             SetupPOVCamera(playerObj.transform);
 
-            Debug.Log("[Cart Combat] 3D Shopper Character & POV Camera spawned and configured successfully!");
             return playerObj;
         }
 

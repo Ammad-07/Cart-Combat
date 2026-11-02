@@ -111,8 +111,6 @@ namespace CartCombat.Store
             target.TakeDamage(meleeDamage, hitDirection);
             currentDurability--;
 
-            Debug.Log($"[Cart Combat] MELEE HIT with {itemName}! Dealt {meleeDamage} dmg (Durability: {currentDurability}/{maxDurability})");
-
             if (currentDurability <= 0)
             {
                 BreakItem(hitDirection);
@@ -160,8 +158,6 @@ namespace CartCombat.Store
             rb.isKinematic = false;
             rb.linearVelocity = dropVelocity;
             rb.AddTorque(Random.insideUnitSphere * 8f, ForceMode.Impulse);
-
-            Debug.Log($"[Cart Combat] Dropped {itemName} onto the ground.");
         }
 
         /// <summary>
@@ -177,8 +173,6 @@ namespace CartCombat.Store
             rb.isKinematic = false;
             rb.linearVelocity = velocity;
             rb.AddTorque(Random.insideUnitSphere * 20f, ForceMode.Impulse);
-
-            Debug.Log($"[Cart Combat] Threw {itemName} with velocity {velocity.magnitude:F1} m/s!");
         }
 
         public void TakeDamage(float amount)
@@ -204,8 +198,6 @@ namespace CartCombat.Store
                 npc.TakeDamage(throwDamage, hitDir);
                 currentDurability--;
 
-                Debug.Log($"[Cart Combat] THROW HIT: {itemName} hit NPC for {throwDamage} dmg! (Durability: {currentDurability}/{maxDurability})");
-
                 if (currentDurability <= 0)
                 {
                     BreakItem(hitDir);
@@ -217,8 +209,6 @@ namespace CartCombat.Store
         {
             if (isBroken) return;
             isBroken = true;
-
-            Debug.Log($"[Cart Combat] {itemName} shattered / broke!");
 
             // Spawn procedural shatter debris particles
             SpawnBreakDebris(impactDirection);

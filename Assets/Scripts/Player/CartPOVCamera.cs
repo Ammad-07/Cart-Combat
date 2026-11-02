@@ -166,7 +166,6 @@ namespace CartCombat.Player
         public void ToggleViewMode()
         {
             currentView = (currentView == CameraViewMode.FirstPersonPOV) ? CameraViewMode.ThirdPersonChase : CameraViewMode.FirstPersonPOV;
-            Debug.Log($"[Cart Combat] Camera switched to: {currentView}");
         }
 
         public void SetTarget(Transform character)

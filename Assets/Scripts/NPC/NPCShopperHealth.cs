@@ -80,7 +80,6 @@ namespace CartCombat.NPC
             if (isDead) return;
 
             currentHealth = Mathf.Max(0f, currentHealth - amount);
-            Debug.Log($"[NPC] {name} took {amount:F0} dmg → HP {currentHealth:F0}/{maxHealth}");
 
             if (!isFlashing) StartCoroutine(HitFlash());
             ApplyKnockback(hitDirection);
@@ -117,8 +116,6 @@ namespace CartCombat.NPC
                 pc.TakeDamage(counterAttackDamage, transform.forward);
             }
 
-            string weaponName = (heldItem != null && heldItem.name.Contains("Weapon")) ? "held grocery weapon" : "fist strike";
-            Debug.Log($"<color=#FF3333><b>[Customer Combat]</b></color> {name} strikes player with {weaponName} for {counterAttackDamage:F0} dmg (5% HP)! Player HP: {pc?.Health:F0}");
             return true;
         }
 
@@ -158,7 +155,6 @@ namespace CartCombat.NPC
             lastBumpTime = Time.time;
 
             bumpCount++;
-            Debug.Log($"<color=#FF9900><b>[Customer Bump]</b></color> {name} hit by cart ({bumpCount}/{bumpsToAggro}) at speed {speed:F1} m/s");
 
             float dmg = wasRam ? 25f : 8f;
             currentHealth = Mathf.Max(1f, currentHealth - dmg);
@@ -181,7 +177,6 @@ namespace CartCombat.NPC
             if (isDead || isEnraged) return;
             isEnraged = true;
             fightBackThreshold = maxHealth + 10f;
-            Debug.Log($"<color=#FF2222><b>[CUSTOMER ENRAGED!]</b> {name} has been hit {bumpCount} times and is now FIGHTING back!</color>");
 
             StartCoroutine(AngerYellFlash());
             if (ai != null)
@@ -235,7 +230,6 @@ namespace CartCombat.NPC
         private IEnumerator DieSequence()
         {
             isDead = true;
-            Debug.Log($"[NPC] {name} knocked out!");
 
             if (ai != null) ai.enabled = false;
 
@@ -298,8 +292,6 @@ namespace CartCombat.NPC
                 ai.enabled = true;
                 ai.ResetState();
             }
-
-            Debug.Log($"[NPC] {name} recovered!");
         }
 
         // ── Color helpers ────────────────────────────────────────────────────

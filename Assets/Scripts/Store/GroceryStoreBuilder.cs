@@ -75,8 +75,6 @@ namespace CartCombat.Store
 
             if (hasFish && hasBanana) return;
 
-            Debug.Log("[Cart Combat] Stocking store with fresh 3D Bananas, Apples, Fish, Baguettes, Chips, and Drinks!");
-
             // Look for Dept_FreshProduce
             Transform produceDept = transform.Find("Departments/Dept_FreshProduce");
             if (produceDept != null)
@@ -286,8 +284,6 @@ namespace CartCombat.Store
             {
                 BuildPlayerCharacter();
             }
-
-            Debug.Log($"[Cart Combat] Grocery Store Arena generated successfully! ({config.storeWidth}m x {config.storeLength}m)");
         }
 
         private void BuildPlayerCharacter()

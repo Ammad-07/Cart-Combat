@@ -32,7 +32,6 @@ namespace CartCombat.NPC
                 {
                     pc.TakeDamage(damage, transform.forward);
                 }
-                Debug.Log($"[NPC Projectile] Hit player for {damage} dmg!");
 
                 // Visual pop: shrink and destroy
                 Destroy(gameObject);

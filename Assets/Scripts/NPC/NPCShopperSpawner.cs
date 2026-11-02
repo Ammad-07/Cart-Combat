@@ -103,7 +103,6 @@ namespace CartCombat.NPC
                         ai.AisleWaypoints = new List<Vector3>(aisleCorridorWaypoints);
                     }
                 }
-                Debug.Log($"[NPC Spawner] {existing.Length} shoppers already present in scene. Waypoints linked.");
                 return;
             }
 
@@ -130,7 +129,6 @@ namespace CartCombat.NPC
                     npc.transform.SetParent(container, true);
                 }
             }
-            Debug.Log($"[NPC Spawner] Spawned {npcCount} shoppers in aisle corridors.");
         }
 
         public void ClearSpawnedNPCs()
@@ -202,7 +200,6 @@ namespace CartCombat.NPC
 
             if (aislesRoot == null)
             {
-                Debug.LogWarning("[NPC Spawner] Could not find Aisles group to fix colliders.");
                 return;
             }
 
@@ -239,9 +236,6 @@ namespace CartCombat.NPC
                 blocker.isTrigger = false;
                 fixed_++;
             }
-
-            if (fixed_ > 0)
-                Debug.Log($"[NPC Spawner] Fixed/verified {fixed_} shelf colliders in Aisles group.");
         }
 
         // ── Waypoint builder ─────────────────────────────────────────────────
@@ -326,8 +320,6 @@ namespace CartCombat.NPC
                 float px = Mathf.Lerp(-storeWidth * 0.4f, storeWidth * 0.4f, frac);
                 aisleCorridorWaypoints.Add(new Vector3(px, 0.05f, storeLength * 0.35f));
             }
-
-            Debug.Log($"[NPC Spawner] Built {aisleCorridorWaypoints.Count} aisle corridor waypoints.");
         }
 
         private Vector3 PickSpawnPosition(int index)
@@ -578,7 +570,6 @@ namespace CartCombat.NPC
             NPCShopperAI    aiComp     = root.AddComponent<NPCShopperAI>();
             aiComp.AisleWaypoints = new List<Vector3>(aisleCorridorWaypoints);
 
-            Debug.Log($"[NPC Spawner] Built NPC_{index:D2} at ({position.x:F1}, {position.z:F1})");
             return root;
         }
 

@@ -371,10 +371,6 @@ namespace CartCombat.Player
                     {
                         AttachToCart();
                     }
-                    else
-                    {
-                        Debug.Log($"[Cart Combat] Too far from cart ({dist:F1}m). Walk closer to press [X] to push it.");
-                    }
                 }
             }
         }
@@ -394,8 +390,6 @@ namespace CartCombat.Player
             // Step player back slightly behind the handle
             Vector3 stepBack = -transform.forward * 0.75f;
             controller.Move(stepBack);
-
-            Debug.Log("<color=#00FF88><b>[Cart Combat]</b> Left the cart! You are now on foot. Walk around and press [X] or [E] near the cart to push again.</color>");
         }
 
         public void AttachToCart()
@@ -415,7 +409,6 @@ namespace CartCombat.Player
             SetCartCharacterMeshesActive(false);
 
             isPushingCart = true;
-            Debug.Log("<color=#00FF88><b>[Cart Combat]</b> Re-grabbed shopping cart! Ready to roll.</color>");
         }
 
         private void SetCartCharacterMeshesActive(bool active)
@@ -525,7 +518,6 @@ namespace CartCombat.Player
                     }
 
                     hitAny = true;
-                    Debug.Log($"<color=#00FF88><b>[Cart Combat]</b> Punch struck {npc.name} for {punchDamage:F0} dmg!</color>");
                     break;
                 }
 
@@ -536,11 +528,6 @@ namespace CartCombat.Player
                     hitRb.AddForce(forward * 240f + Vector3.up * 50f, ForceMode.Impulse);
                     hitAny = true;
                 }
-            }
-
-            if (!hitAny)
-            {
-                Debug.Log("[Cart Combat] Threw a body punch into the air!");
             }
         }
 
@@ -628,10 +615,6 @@ namespace CartCombat.Player
             {
                 PickUpItem(targetItem);
             }
-            else
-            {
-                Debug.Log("[Cart Combat] No grocery items within reach to grab. Move closer to a shelf or floor item.");
-            }
         }
 
         private void PickUpItem(GroceryItem item)
@@ -640,20 +623,17 @@ namespace CartCombat.Player
             if (heldItem == null)
             {
                 EquipHeldItem(item);
-                Debug.Log($"[Cart Combat] Wielding {item.ItemName} in hand! Ready to swing.");
             }
             // Otherwise, store in cart basket if pushing cart
             else if (isPushingCart && carriedItems.Count < maxBasketCapacity)
             {
                 StoreInBasket(item);
-                Debug.Log($"[Cart Combat] Stored {item.ItemName} in cart basket ({carriedItems.Count}/{maxBasketCapacity}).");
             }
             else
             {
                 // If on foot or basket full, swap currently held item
                 DropHeldItem();
                 EquipHeldItem(item);
-                Debug.Log($"[Cart Combat] Swapped weapon to {item.ItemName}!");
             }
         }
 
@@ -738,7 +718,6 @@ namespace CartCombat.Player
 
             EquipHeldItem(newHeld);
             RearrangeBasketVisuals();
-            Debug.Log($"[Cart Combat] Swapped weapon to {newHeld.ItemName}!");
         }
 
         private void RearrangeBasketVisuals()
@@ -860,11 +839,6 @@ namespace CartCombat.Player
                     hitRb.AddForce(forward * 250f + Vector3.up * 50f, ForceMode.Impulse);
                 }
             }
-
-            if (!hitTarget)
-            {
-                Debug.Log($"[Cart Combat] Swung {heldItem.ItemName} in the air!");
-            }
         }
 
         // ── Throwing Attack ──────────────────────────────────────────────────
@@ -932,13 +906,6 @@ namespace CartCombat.Player
             }
 
             StartCoroutine(DamageFlinchRoutine(hitDirection));
-
-            Debug.Log($"<color=#FF2222><b>[Cart Combat]</b> Player took {amount:F0} damage from angry customer! HP: {playerHealth:F0}/{maxHealth:F0}</color>");
-
-            if (playerHealth <= 0f)
-            {
-                Debug.Log("<color=#FF0000><b>[Cart Combat]</b> Player was knocked out by customer!</color>");
-            }
         }
 
         private IEnumerator DamageFlinchRoutine(Vector3 hitDir)

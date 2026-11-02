@@ -396,7 +396,6 @@ namespace CartCombat.NPC
             throwable.AddComponent<NPCThrowableProjectile>().Initialize(player, 5f);
 
             Object.Destroy(throwable, 5f);
-            Debug.Log($"[NPC] {name} throws item at player!");
         }
 
         // ── Utility ──────────────────────────────────────────────────────────
