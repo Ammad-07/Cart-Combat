@@ -204,10 +204,13 @@ namespace CartCombat.NPC
             }
 
             int fixed_ = 0;
-            // Every Renderer-bearing child is a shelf piece → ensure it has a BoxCollider
+            // Every Renderer-bearing child that is part of a shelf structure → ensure it has a BoxCollider
             Renderer[] allRenderers = aislesRoot.GetComponentsInChildren<Renderer>();
             foreach (Renderer r in allRenderers)
             {
+                // Do not add extra colliders to grocery items or visual props
+                if (r.GetComponentInParent<CartCombat.Store.GroceryItem>() != null) continue;
+
                 GameObject go = r.gameObject;
                 if (go.GetComponent<Collider>() == null)
                 {
@@ -219,8 +222,9 @@ namespace CartCombat.NPC
                 if (col != null) col.isTrigger = false;
             }
 
-            // Also add a single solid BoxCollider to each Aisle root as a blocker
-            // matching the full gondola footprint — prevents NPCs clipping through back panel
+            // Also add a central partition solid blocker
+            // matching only the central spine/backboard (width 0.20f) — prevents NPCs clipping through back panel
+            // while leaving the open shelf tiers unblocked for items and player interaction
             foreach (Transform aisle in aislesRoot)
             {
                 if (!aisle.name.StartsWith("Aisle_")) continue;
@@ -228,11 +232,11 @@ namespace CartCombat.NPC
                 Rigidbody aisleRB = aisle.GetComponent<Rigidbody>();
                 if (aisleRB == null) { /* static — good */ }
 
-                // Central partition solid blocker
+                // Central partition solid blocker (thickness 0.20m, height 2.6m, length 22m)
                 BoxCollider blocker = aisle.GetComponent<BoxCollider>();
                 if (blocker == null) blocker = aisle.gameObject.AddComponent<BoxCollider>();
                 blocker.center = new Vector3(0f, 1.3f, 0f);
-                blocker.size   = new Vector3(2.2f, 2.6f, 22f);  // matches default config dimensions
+                blocker.size   = new Vector3(0.20f, 2.6f, 22f);
                 blocker.isTrigger = false;
                 fixed_++;
             }

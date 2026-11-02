@@ -62,7 +62,13 @@ namespace CartCombat.Store
         /// Checks if the store already has the new 3D custom grocery items (Bananas, Fish, Apples, Chips, etc.).
         /// If not, populates produce tables and deli counters so the player immediately has all weapons available!
         /// </summary>
-        public void EnsureCustomItemsStocked()
+        public void EnsureCustomItemsStocked(bool forceAisles = false)
+        {
+            EnsureProduceAndDeliStocked();
+            StockAndAlignAllAisles(forceAisles);
+        }
+
+        public void EnsureProduceAndDeliStocked()
         {
             GroceryItem[] items = Object.FindObjectsByType<GroceryItem>(FindObjectsSortMode.None);
             bool hasFish = false;
@@ -136,27 +142,6 @@ namespace CartCombat.Store
                     GameObject breadObj = GroceryItemFactory.CreateItem(GroceryItemType.Baguette, breadPos, breadRot, deliDept);
                     Rigidbody rb = breadObj.GetComponent<Rigidbody>();
                     if (rb != null) rb.isKinematic = true;
-                }
-            }
-
-            // Look for Aisles and ensure each aisle's shelves are stocked with 3D items
-            Transform aislesGroup = transform.Find("Aisles");
-            if (aislesGroup != null)
-            {
-                for (int i = 0; i < aislesGroup.childCount; i++)
-                {
-                    Transform aisleTrans = aislesGroup.GetChild(i);
-                    Transform stockedItems = aisleTrans.Find("StockedItems");
-                    if (stockedItems == null || stockedItems.childCount == 0)
-                    {
-                        StoreAisle comp = aisleTrans.GetComponent<StoreAisle>();
-                        if (comp == null) comp = aisleTrans.gameObject.AddComponent<StoreAisle>();
-                        int aisleNum = i + 1;
-                        PopulateShelfItems(comp, aisleTrans, aisleNum, true, 0.55f);
-                        PopulateShelfItems(comp, aisleTrans, aisleNum, false, 0.55f);
-                        PopulateShelfItems(comp, aisleTrans, aisleNum, true, 1.15f);
-                        PopulateShelfItems(comp, aisleTrans, aisleNum, false, 1.15f);
-                    }
                 }
             }
         }
@@ -698,12 +683,12 @@ namespace CartCombat.Store
                 shelfR.transform.localScale = new Vector3(width * 0.5f, 0.06f, len);
                 shelfR.GetComponent<Renderer>().sharedMaterial = shelfMat;
 
-                // Stock items on shelves
-                if (config.populateShelves)
-                {
-                    PopulateShelfItems(comp, shelfL.transform, aisleNum, true, y);
-                    PopulateShelfItems(comp, shelfR.transform, aisleNum, false, y);
-                }
+            }
+
+            // Stock items cleanly on all physical tiers of this aisle
+            if (config.populateShelves)
+            {
+                StockAisleShelves(aisle.transform, aisleNum, true);
             }
 
             // Endcaps (Featured displays at both ends of aisle)
@@ -754,59 +739,218 @@ namespace CartCombat.Store
             DestroyImmediate(cableR.GetComponent<Collider>());
         }
 
-        private void PopulateShelfItems(StoreAisle aisle, Transform shelf, int aisleNum, bool isLeft, float shelfY)
+        /// <summary>
+        /// Automatically discovers all physical shelf tiers in every aisle and populates
+        /// grocery items resting perfectly on top of each shelf surface with zero clipping.
+        /// </summary>
+        public void StockAndAlignAllAisles(bool forceClean = false)
         {
-            int itemCount = (config != null) ? config.itemsPerShelfTier : 5;
-            float aisleLen = (config != null) ? config.aisleLength : 22f;
-            float stepZ = aisleLen / (itemCount + 1);
-            float startZ = -aisleLen * 0.5f + stepZ;
-            float width = (config != null) ? config.shelvingWidth : 2.2f;
+            Transform aislesGroup = transform.Find("Aisles");
+            if (aislesGroup == null) return;
 
-            // Dedicated items container per aisle with uniform scale (1,1,1) so items are never stretched
-            Transform itemsRoot = aisle.transform.Find("StockedItems");
+            for (int i = 0; i < aislesGroup.childCount; i++)
+            {
+                Transform aisleTrans = aislesGroup.GetChild(i);
+                int aisleNum = i + 1;
+                StockAisleShelves(aisleTrans, aisleNum, forceClean);
+            }
+        }
+
+        /// <summary>
+        /// Dynamically stocks all physical left and right shelf tiers of an aisle with items aligned flush to the surface.
+        /// </summary>
+        public void StockAisleShelves(Transform aisleTrans, int aisleNum, bool forceClean = false)
+        {
+            StoreAisle comp = aisleTrans.GetComponent<StoreAisle>();
+            if (comp == null) comp = aisleTrans.gameObject.AddComponent<StoreAisle>();
+
+            // Clean up any legacy holder
+            Transform legacyRoot = aisleTrans.Find("StockedItems_Holder");
+            if (legacyRoot != null)
+            {
+                if (Application.isPlaying) Destroy(legacyRoot.gameObject);
+                else DestroyImmediate(legacyRoot.gameObject);
+            }
+
+            // Find or create StockedItems container
+            Transform itemsRoot = aisleTrans.Find("StockedItems");
             if (itemsRoot == null)
             {
                 GameObject rootObj = new GameObject("StockedItems");
-                rootObj.transform.SetParent(aisle.transform, false);
+                rootObj.transform.SetParent(aisleTrans, false);
+                rootObj.transform.localPosition = Vector3.zero;
+                rootObj.transform.localRotation = Quaternion.identity;
+                rootObj.transform.localScale = Vector3.one;
                 itemsRoot = rootObj.transform;
             }
-
-            for (int i = 0; i < itemCount; i++)
+            else if (forceClean || itemsRoot.childCount == 0)
             {
-                float z = startZ + i * stepZ;
-                float xOffset = isLeft ? -width * 0.25f : width * 0.25f;
-                Vector3 localPos = new Vector3(xOffset, shelfY + 0.04f, z);
-                Vector3 itemPos = aisle.transform.TransformPoint(localPos);
-                Quaternion itemRot = aisle.transform.rotation;
-                GroceryItemType itemType = GroceryItemType.CerealBox;
-
-                switch (aisleNum)
+                // Delete existing items to realign freshly
+                for (int c = itemsRoot.childCount - 1; c >= 0; c--)
                 {
-                    case 1:
-                        // Snacks & Cereal: alternating Chips and Cereal boxes
-                        itemType = (i % 2 == 0) ? GroceryItemType.Chips : GroceryItemType.CerealBox;
-                        itemRot *= Quaternion.Euler(0f, (i % 2 == 0) ? 15f : 0f, 0f);
-                        break;
-                    case 2:
-                        // Canned goods & soups
-                        itemType = GroceryItemType.SodaCan;
-                        break;
-                    case 3:
-                        // Beverages: Soda Cans and Soda Bottles
-                        itemType = (i % 2 == 0) ? GroceryItemType.SodaCan : GroceryItemType.SodaBottle;
-                        break;
-                    case 4:
-                        // Household & misc
-                        itemType = (i % 2 == 0) ? GroceryItemType.SodaBottle : GroceryItemType.CerealBox;
-                        break;
+                    GameObject child = itemsRoot.GetChild(c).gameObject;
+                    if (Application.isPlaying) Destroy(child);
+                    else DestroyImmediate(child);
+                }
+            }
+            else
+            {
+                // Already populated and not forcing clean
+                return;
+            }
+
+            // Collect all physical shelf tiers in this aisle
+            List<Transform> leftTiers = new List<Transform>();
+            List<Transform> rightTiers = new List<Transform>();
+
+            foreach (Transform child in aisleTrans)
+            {
+                if (child.name.StartsWith("Shelf_Left_Tier_"))
+                    leftTiers.Add(child);
+                else if (child.name.StartsWith("Shelf_Right_Tier_"))
+                    rightTiers.Add(child);
+            }
+
+            // Sort ascending by local Y so Tier 1 is lowest
+            leftTiers.Sort((a, b) => a.localPosition.y.CompareTo(b.localPosition.y));
+            rightTiers.Sort((a, b) => a.localPosition.y.CompareTo(b.localPosition.y));
+
+            // Fallback if tiers aren't found by name
+            if (leftTiers.Count == 0 && rightTiers.Count == 0)
+            {
+                float h = (config != null) ? config.shelfHeight : 2.6f;
+                int tiers = (config != null) ? config.shelfTiers : 4;
+                float w = (config != null) ? config.shelvingWidth : 2.2f;
+                float step = (h - 0.4f) / tiers;
+                for (int t = 0; t < tiers; t++)
+                {
+                    float y = 0.3f + t * step;
+                    PopulateSimulatedTier(aisleTrans, itemsRoot, comp, -w * 0.25f, y + 0.032f, aisleNum, t, true);
+                    PopulateSimulatedTier(aisleTrans, itemsRoot, comp, w * 0.25f, y + 0.032f, aisleNum, t, false);
+                }
+                return;
+            }
+
+            // Stock all Left Tiers
+            for (int t = 0; t < leftTiers.Count; t++)
+            {
+                PopulateTierItems(aisleTrans, itemsRoot, comp, leftTiers[t], aisleNum, t, true);
+            }
+
+            // Stock all Right Tiers
+            for (int t = 0; t < rightTiers.Count; t++)
+            {
+                PopulateTierItems(aisleTrans, itemsRoot, comp, rightTiers[t], aisleNum, t, false);
+            }
+        }
+
+        private void PopulateTierItems(Transform aisleTrans, Transform itemsRoot, StoreAisle aisleComp, Transform shelfTier, int aisleNum, int tierIndex, bool isLeft)
+        {
+            // Exact shelf surface Y:
+            // shelfTier.localPosition.y is the center of the shelf board.
+            // shelfTier.localScale.y is the board thickness (0.06m).
+            // Top surface of the board = center + half thickness.
+            float shelfTopSurfaceY = shelfTier.localPosition.y + (shelfTier.localScale.y * 0.5f);
+
+            // Item pivot is at y = 0. Adding a tiny 0.002f margin prevents z-fighting and ensures zero clipping into shelf board
+            float itemY = shelfTopSurfaceY + 0.002f;
+
+            // Lateral placement: centered along the shelf tier
+            float itemX = shelfTier.localPosition.x;
+
+            // Longitudinal placement along Z:
+            float shelfLen = shelfTier.localScale.z > 0f ? shelfTier.localScale.z : 22f;
+            float span = shelfLen * 0.40f; // -8.8m to +8.8m
+            int count = (config != null) ? config.itemsPerShelfTier : 6;
+            if (count < 4) count = 6;
+
+            float stepZ = (span * 2f) / (count - 1);
+
+            // Orientation: Items face outwards towards the aisle corridor so shoppers see labels cleanly
+            Quaternion baseRot = aisleTrans.rotation * (isLeft ? Quaternion.Euler(0f, -90f, 0f) : Quaternion.Euler(0f, 90f, 0f));
+
+            for (int i = 0; i < count; i++)
+            {
+                float z = -span + i * stepZ;
+                Vector3 localPos = new Vector3(itemX, itemY, z);
+                Vector3 worldPos = aisleTrans.TransformPoint(localPos);
+
+                GroceryItemType itemType = GetAisleItemType(aisleNum, tierIndex, i);
+
+                GameObject itemObj = GroceryItemFactory.CreateItem(itemType, worldPos, baseRot, itemsRoot);
+
+                // Ensure physics starts kinematic so items don't slide or fall off shelves
+                Rigidbody rb = itemObj.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    rb.isKinematic = true;
+                    rb.interpolation = RigidbodyInterpolation.None;
                 }
 
-                GameObject itemObj = GroceryItemFactory.CreateItem(itemType, itemPos, itemRot, itemsRoot);
+                GroceryItem gItem = itemObj.GetComponent<GroceryItem>();
+                if (gItem != null && aisleComp != null)
+                {
+                    aisleComp.RegisterItem(gItem);
+                }
+            }
+        }
+
+        private void PopulateSimulatedTier(Transform aisleTrans, Transform itemsRoot, StoreAisle aisleComp, float itemX, float itemY, int aisleNum, int tierIndex, bool isLeft)
+        {
+            float shelfLen = (config != null) ? config.aisleLength : 22f;
+            float span = shelfLen * 0.40f;
+            int count = (config != null) ? config.itemsPerShelfTier : 6;
+            if (count < 4) count = 6;
+
+            float stepZ = (span * 2f) / (count - 1);
+            Quaternion baseRot = aisleTrans.rotation * (isLeft ? Quaternion.Euler(0f, -90f, 0f) : Quaternion.Euler(0f, 90f, 0f));
+
+            for (int i = 0; i < count; i++)
+            {
+                float z = -span + i * stepZ;
+                Vector3 localPos = new Vector3(itemX, itemY, z);
+                Vector3 worldPos = aisleTrans.TransformPoint(localPos);
+
+                GroceryItemType itemType = GetAisleItemType(aisleNum, tierIndex, i);
+
+                GameObject itemObj = GroceryItemFactory.CreateItem(itemType, worldPos, baseRot, itemsRoot);
                 Rigidbody rb = itemObj.GetComponent<Rigidbody>();
                 if (rb != null) rb.isKinematic = true;
 
                 GroceryItem gItem = itemObj.GetComponent<GroceryItem>();
-                if (gItem != null && aisle != null) aisle.RegisterItem(gItem);
+                if (gItem != null && aisleComp != null) aisleComp.RegisterItem(gItem);
+            }
+        }
+
+        private GroceryItemType GetAisleItemType(int aisleNum, int tierIndex, int itemIndex)
+        {
+            switch (aisleNum)
+            {
+                case 1:
+                    // Snacks & Cereal:
+                    // Tiers 0 & 1 (Lower): Cereal Boxes
+                    // Tiers 2 & 3 (Upper): Flamin' Chips Bags
+                    return (tierIndex <= 1) ? GroceryItemType.CerealBox : GroceryItemType.Chips;
+
+                case 2:
+                    // Canned Goods & Soups:
+                    // All tiers: Aluminum Soda Cans (soup/canned goods)
+                    return GroceryItemType.SodaCan;
+
+                case 3:
+                    // Beverages & Soda:
+                    // Tiers 0 & 1 (Lower): Mega Gulp Soda Bottles
+                    // Tiers 2 & 3 (Upper): Fizzie Cola Cans
+                    return (tierIndex <= 1) ? GroceryItemType.SodaBottle : GroceryItemType.SodaCan;
+
+                case 4:
+                default:
+                    // Household & Misc:
+                    // Diverse selection: Cereal, Cans, Bottles, Chips
+                    if (tierIndex == 0) return GroceryItemType.CerealBox;
+                    if (tierIndex == 1) return GroceryItemType.SodaBottle;
+                    if (tierIndex == 2) return GroceryItemType.SodaCan;
+                    return (itemIndex % 2 == 0) ? GroceryItemType.Chips : GroceryItemType.CerealBox;
             }
         }
 

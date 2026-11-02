@@ -152,13 +152,13 @@ namespace CartCombat.Player
             {
                 if (!player.IsPushingCart)
                 {
-                    speedText.text = $"🏃 {speed:F1} m/s";
+                    speedText.text = $"ON FOOT: {speed:F1} m/s";
                 }
                 else
                 {
                     speedText.text = player.IsRamming
-                        ? "<color=#FFD600>⚡ RAM BOOST!</color>"
-                        : $"🛒 {speed:F1} m/s";
+                        ? "<color=#FFD600>RAM BOOST!</color>"
+                        : $"{speed:F1} m/s";
                 }
             }
 

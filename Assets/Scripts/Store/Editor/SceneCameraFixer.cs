@@ -202,10 +202,11 @@ namespace CartCombat.Store.Editor
             GroceryStoreBuilder builder = Object.FindFirstObjectByType<GroceryStoreBuilder>();
             if (builder != null)
             {
-                builder.EnsureCustomItemsStocked();
+                builder.EnsureCustomItemsStocked(true);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                UnityEditor.SceneManagement.EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
                 SceneView.RepaintAll();
-                Debug.Log("<color=#00FF88><b>[Cart Combat]</b> All 4 Aisles and produce tables have been freshly STOCKED with 3D grocery items!</color>");
+                Debug.Log("<color=#00FF88><b>[Cart Combat]</b> All 4 Aisles and produce tables have been freshly STOCKED and PERFECTLY ALIGNED with 3D grocery items!</color>");
             }
         }
 
